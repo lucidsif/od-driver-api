@@ -1,10 +1,11 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Api.Args.Album where
+module Api.Args.Location where
 
 import           Data.Text                      ( Text )
 import           GHC.Generics                   ( Generic )
 
-newtype AlbumArgs = AlbumArgs
-  { name   :: Text
+newtype LocationArgs = LocationArgs
+  { business_name   :: Text
+  , address :: Text
   } deriving Generic
