@@ -1,3 +1,5 @@
-# Changelog for driver-api
+# Revision history for musikell
 
-## Unreleased changes
+## 0.1.0.0 -- YYYY-mm-dd
+
+* First version. Released on an unsuspecting world.
