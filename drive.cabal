@@ -4,7 +4,7 @@ cabal-version:       2.0
 
 name:                driver-api
 version:             0.1.0.0
-synopsis:            Artists, Albums and Songs
+synopsis:            Location, DeliveryRoute. DriverVisit, VendorVisit
 -- description:
 homepage:            n/a
 bug-reports:         n/a
