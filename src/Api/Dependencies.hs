@@ -1,11 +1,9 @@
 module Api.Dependencies where
 
-import           Http.Client.Spotify            ( SpotifyClient )
-import           Repository.Album               ( AlbumRepository )
-import           Repository.Artist              ( ArtistRepository )
+import           Repository.DeliveryRoute               ( DeliveryRouteRepository )
+import           Repository.DriverVisit              ( DriverVisitRepository )
 
 data Deps = Deps
-  { artistRepository :: ArtistRepository IO
-  , albumRepository :: AlbumRepository IO
-  , spotifyClient :: SpotifyClient IO
+  { driverVisitRepository :: DriverVisitRepository IO
+  , deliveryRouteRepository :: DeliveryRouteRepository IO
   }
