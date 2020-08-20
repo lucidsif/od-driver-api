@@ -8,16 +8,16 @@ module Api.Schema.Mutation
   )
 where
 
-import           Api.Args.Artist                ( ArtistIdArg
-                                                , ArtistListArgs
+import           Api.Args.DriverVisit                ( DriverVisitIdArg
+                                                , DriverVisitListArgs
                                                 )
-import qualified Api.Args.Artist               as Args
+import qualified Api.Args.DriverVisit               as Args
 import           Api.Dependencies               ( Deps(..) )
-import           Api.Domain.AlbumQL             ( AlbumQL
-                                                , toAlbumQL
+import           Api.Domain.DeliveryRouteQL             ( DeliveryRouteQL
+                                                , toDeliveryRouteQL
                                                 )
-import           Api.Domain.ArtistQL            ( ArtistQL
-                                                , toArtistQL
+import           Api.Domain.DriverVisitQL            ( DriverVisitQL
+                                                , toDriverVisitQL
                                                 )
 import           Control.Monad.Catch            ( Exception
                                                 , handle
@@ -28,15 +28,15 @@ import           Data.Morpheus.Types            ( IORes
 import           Data.Text
 import           GHC.Generics                   ( Generic )
 import qualified Http.Client.Params            as Http
-import           Service.DataLoader             ( ExistingAlbumError(..)
-                                                , ExistingArtistError(..)
-                                                , createAlbums
-                                                , createArtists
+import           Service.DataLoader             ( ExistingDeliveryRouteError(..)
+                                                , ExistingDriverVisitError(..)
+                                                , createDeliveryRoutes
+                                                , createDriverVisits
                                                 )
 
 data Mutation = Mutation
-  { newArtist :: ArtistListArgs -> IORes [ArtistQL]
-  , newArtistAlbums :: ArtistIdArg -> IORes [AlbumQL]
+  { newDriverVisit :: DriverVisitListArgs -> IORes [DriverVisitQL]
+  , newDriverVisitDeliveryRoutes :: DriverVisitIdArg -> IORes [DeliveryRouteQL]
   } deriving Generic
 
 baseHandle
@@ -49,22 +49,22 @@ baseHandle
 baseHandle action f g =
   handle (pure . Left . unpack <$> g) ((\x -> Right $ f <$> x) <$> action)
 
-newArtistMutation :: Deps -> ArtistListArgs -> IORes [ArtistQL]
-newArtistMutation Deps {..} args =
-  let artists = Http.ArtistName <$> Args.names args
-      apiCall = createArtists spotifyClient artistRepository artists
-      errorFn ExistingArtistError = "Failed to create new artist"
-  in  resolver $ baseHandle apiCall toArtistQL errorFn
+newDriverVisitMutation :: Deps -> DriverVisitListArgs -> IORes [DriverVisitQL]
+newDriverVisitMutation Deps {..} args =
+  let DriverVisits = Http.DriverVisitName <$> Args.names args
+      apiCall = createDriverVisits spotifyClient DriverVisitRepository DriverVisits
+      errorFn ExistingDriverVisitError = "Failed to create new DriverVisit"
+  in  resolver $ baseHandle apiCall toDriverVisitQL errorFn
 
-newArtistAlbumsMutation :: Deps -> ArtistIdArg -> IORes [AlbumQL]
-newArtistAlbumsMutation Deps {..} arg =
-  let artistId = Http.ArtistId $ Args.spotifyId arg
-      apiCall = createAlbums spotifyClient albumRepository artistId
-      errorFn ExistingAlbumError = "Failed to create albums for artist"
-  in  resolver $ baseHandle apiCall toAlbumQL errorFn
+newDriverVisitDeliveryRoutesMutation :: Deps -> DriverVisitIdArg -> IORes [DeliveryRouteQL]
+newDriverVisitDeliveryRoutesMutation Deps {..} arg =
+  let DriverVisitId = Http.DriverVisitId $ Args.spotifyId arg
+      apiCall = createDeliveryRoutes spotifyClient DeliveryRouteRepository DriverVisitId
+      errorFn ExistingDeliveryRouteError = "Failed to create DeliveryRoutes for DriverVisit"
+  in  resolver $ baseHandle apiCall toDeliveryRouteQL errorFn
 
 resolveMutation :: Deps -> Mutation
 resolveMutation deps = Mutation
-  { newArtist       = newArtistMutation deps
-  , newArtistAlbums = newArtistAlbumsMutation deps
+  { newDriverVisit       = newDriverVisitMutation deps
+  , newDriverVisitDeliveryRoutes = newDriverVisitDeliveryRoutesMutation deps
   }

@@ -4,45 +4,45 @@
 -- | The GraphQL schema for queries
 module Api.Schema.Query where
 
-import           Api.Args.Album                 ( AlbumArgs )
-import qualified Api.Args.Album                as AlbumArgs
+import           Api.Args.DeliveryRoute                 ( DeliveryRouteArgs )
+import qualified Api.Args.DeliveryRoute                as DeliveryRouteArgs
 import           Api.Args.Artist                ( ArtistArgs )
 import qualified Api.Args.Artist               as Args
 import           Api.Dependencies               ( Deps(..) )
-import           Api.Domain.AlbumQL             ( AlbumQL
-                                                , toAlbumQL
+import           Api.Domain.DeliveryRouteQL             ( DeliveryRouteQL
+                                                , toDeliveryRouteQL
                                                 )
-import           Api.Domain.ArtistQL            ( ArtistQL
-                                                , toArtistQL
+import           Api.Domain.DriverVisitQL            ( DriverVisitQL
+                                                , toDriverVisitQL
                                                 )
 import           Data.Functor                   ( (<&>) )
 import           Data.Morpheus.Types            ( IORes
                                                 , resolver
                                                 )
 import           GHC.Generics                   ( Generic )
-import           Repository.Album
-import           Repository.Artist
-import           Repository.Entity              ( ArtistName(..) )
+import           Repository.DeliveryRoute
+import           Repository.DriverVisit
+import           Repository.Entity              ( DriverVisitName(..) )
 
 data Query = Query
-  { artist :: ArtistArgs -> IORes ArtistQL
-  , albumsByArtist :: AlbumArgs -> IORes [AlbumQL]
+  { DriverVisit :: DriverVisitArgs -> IORes DriverVisitQL
+  , DeliveryRoutesByDriverVisit :: DeliveryRouteArgs -> IORes [DeliveryRouteQL]
   } deriving Generic
 
-resolveArtist :: ArtistRepository IO -> ArtistArgs -> IORes ArtistQL
-resolveArtist ArtistRepository {..} args = resolver result where
-  result = findArtist (ArtistName $ Args.name args) <&> \case
-    Just a  -> Right $ toArtistQL a
+resolveDriverVisit :: DriverVisitRepository IO -> DriverVisitArgs -> IORes DriverVisitQL
+resolveDriverVisit DriverVisitRepository {..} args = resolver result where
+  result = findDriverVisit (DriverVisitName $ Args.name args) <&> \case
+    Just a  -> Right $ toDriverVisitQL a
     Nothing -> Left "No hits"
 
-resolveAlbumsByArtist :: AlbumRepository IO -> AlbumArgs -> IORes [AlbumQL]
-resolveAlbumsByArtist AlbumRepository {..} args = resolver result where
-  result = findAlbumsByArtist (ArtistName $ AlbumArgs.name args) <&> \case
+resolveDeliveryRoutesByDriverVisit :: DeliveryRouteRepository IO -> DeliveryRouteArgs -> IORes [DeliveryRouteQL]
+resolveDeliveryRoutesByDriverVisit DeliveryRouteRepository {..} args = resolver result where
+  result = findDeliveryRoutesByDriverVisit (DriverVisitName $ DeliveryRouteArgs.name args) <&> \case
     [] -> Left "No hits"
-    xs -> Right $ toAlbumQL <$> xs
+    xs -> Right $ toDeliveryRouteQL <$> xs
 
 resolveQuery :: Deps -> Query
 resolveQuery Deps {..} = Query
-  { artist         = resolveArtist artistRepository
-  , albumsByArtist = resolveAlbumsByArtist albumRepository
+  { driverVisit         = resolveDriverVisit Repository
+  , DeliveryRoutesByDriverVisit = resolveDeliveryRoutesByArtist DeliveryRouteRepository
   }
