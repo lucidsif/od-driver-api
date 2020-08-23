@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 
--- | The Neo4j Mapper type class, its instances and some helper functions.
+-- | The PostgreSQL Mapper type class, its instances and some helper functions. This feels like I'm reinventing the wheel...
 module Repository.Mapper where
 
 import           Data.Map                       ( Map )
@@ -15,22 +15,6 @@ type NodeProps = Map Text Value
 
 class NodeMapper a where
   toEntity :: NodeProps -> Maybe a
-
-instance NodeMapper Artist where
-  toEntity p =
-    Artist
-      .   ArtistSpotifyId
-      <$> (Map.lookup "spotifyId" p >>= exactMaybe :: Maybe Text)
-      <*> (Map.lookup "name" p >>= exactMaybe :: Maybe Text)
-
-instance NodeMapper Album where
-  toEntity p =
-    Album
-      .   AlbumSpotifyId
-      <$> (Map.lookup "spotifyId" p >>= exactMaybe :: Maybe Text)
-      <*> (Map.lookup "name" p >>= exactMaybe :: Maybe Text)
-      <*> (Map.lookup "released" p >>= exactMaybe :: Maybe Int)
-      <*> (Map.lookup "length" p >>= exactMaybe :: Maybe Int)
 
 instance NodeMapper Song where
   toEntity p =
@@ -63,8 +47,3 @@ convert
   :: forall a b . RecordValue a => Text -> (a -> b) -> NodeProps -> Maybe b
 convert key f p = f <$> (Map.lookup key p >>= exactMaybe :: Maybe a)
 
-toArtistSpotifyId :: NodeProps -> Maybe ArtistSpotifyId
-toArtistSpotifyId = convert "a.spotifyId" ArtistSpotifyId
-
-toAlbumSpotifyId :: NodeProps -> Maybe AlbumSpotifyId
-toAlbumSpotifyId = convert "b.spotifyId" AlbumSpotifyId

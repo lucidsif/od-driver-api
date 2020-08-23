@@ -25,7 +25,7 @@ data DeliveryRouteRepository m = DeliveryRouteRepository
 
 mkDeliveryRouteRepository :: Pool Pipe -> IO (DeliveryRouteRepository IO)
 mkDeliveryRouteRepository pool = pure $ DeliveryRouteRepository
-  { findDeliveryRoute           = withResource pool . findAlbum'
+  { findDeliveryRoute           = withResource pool . findDeliveryRoute'
   , findDeliveryRoutesByVisitDate   = withResource pool . findDeliveryRoutesByVisitDate'
   , createDeliveryRoute          = deliveryRoute ->
                              withResource pool (createDeliveryRoute' deliveryRoute)

@@ -52,14 +52,14 @@ baseHandle action f g =
 newDriverVisitMutation :: Deps -> DriverVisitListArgs -> IORes [DriverVisitQL]
 newDriverVisitMutation Deps {..} args =
   let DriverVisits = Http.DriverVisitName <$> Args.names args
-      apiCall = createDriverVisits spotifyClient DriverVisitRepository DriverVisits
+      apiCall = createDriverVisits DriverVisitRepository DriverVisits
       errorFn ExistingDriverVisitError = "Failed to create new DriverVisit"
   in  resolver $ baseHandle apiCall toDriverVisitQL errorFn
 
 newDriverVisitDeliveryRoutesMutation :: Deps -> DriverVisitIdArg -> IORes [DeliveryRouteQL]
 newDriverVisitDeliveryRoutesMutation Deps {..} arg =
-  let DriverVisitId = Http.DriverVisitId $ Args.spotifyId arg
-      apiCall = createDeliveryRoutes spotifyClient DeliveryRouteRepository DriverVisitId
+  let DriverVisitId = Http.DriverVisitId 
+      apiCall = createDeliveryRoutes DeliveryRouteRepository DriverVisitId
       errorFn ExistingDeliveryRouteError = "Failed to create DeliveryRoutes for DriverVisit"
   in  resolver $ baseHandle apiCall toDeliveryRouteQL errorFn
 

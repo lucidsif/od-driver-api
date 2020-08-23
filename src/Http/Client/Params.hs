@@ -7,10 +7,10 @@ import           Data.Text                      ( Text )
 import           GHC.Generics                   ( Generic )
 
 newtype AccessToken = AccessToken { unAccessToken :: Text } deriving (Generic, Show)
-newtype ArtistId = ArtistId { unArtistId :: Text } deriving Show
-newtype ArtistName = ArtistName { unArtistName :: Text } deriving Show
+newtype DriverVisitId = DriverVisitId { unDriverVisitId :: Text } deriving Show
+newtype DriverVisitName = DriverVisitName { unDriverVisitName :: Text } deriving Show
 
-newtype AlbumId = AlbumId { unAlbumId :: Text } deriving (Eq, Ord, Show)
+newtype DeliveryRouteId = DeliveryRouteId { unDeliveryRouteId :: Text } deriving (Eq, Ord, Show)
 
 instance FromJSON AccessToken where
   parseJSON = withObject "f" $ \v -> AccessToken

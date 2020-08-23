@@ -16,31 +16,30 @@ newtype TrackResponse = TrackResponse
   { trackItems :: [TrackItem]
   } deriving (Generic, Show)
 
-data AlbumItem = AlbumItem
-  { albumId :: Text
-  , albumName :: Text
-  , albumReleaseDate :: Text
+data DeliveryRouteItem = DeliveryRouteItem
+  { deliveryRouteId :: Text
+  , deliveryRouteName :: Text
   } deriving (Eq, Generic, Show)
 
-instance Ord AlbumItem where
-  (AlbumItem id1 _ _) `compare` (AlbumItem id2 _ _) = id1 `compare` id2
+instance Ord DeliveryRouteItem where
+  (DeliveryRouteItem id1 _ _) `compare` (DeliveryRouteItem id2 _ _) = id1 `compare` id2
 
-newtype AlbumResponse = AlbumResponse
-  { albumItems :: [AlbumItem]
+newtype DeliveryRouteResponse = DeliveryRouteResponse
+  { DeliveryRouteItems :: [DeliveryRouteItem]
   } deriving (Generic, Show)
 
-data ArtistItem = ArtistItem
-  { artistId :: Text
-  , artistName :: Text
+data DriverVisitItem = DriverVisitItem
+  { driverVisitId :: Text
+  , driverVisitName :: Text
   } deriving (Generic, Show)
 
-newtype ArtistObject = ArtistObject
-  { artistItems :: [ArtistItem]
+newtype DriverVisitObject = DriverVisitObject
+  { driverVisitItems :: [DriverVisitItem]
   } deriving (Generic, Show)
 
 -- TODO: See if this can be simplified
-newtype ArtistResponse = ArtistResponse
-  { artistObject :: ArtistObject
+newtype DriverVisitResponse = DriverVisitResponse
+  { driverVisitObject :: DriverVisitObject
   } deriving (Generic, Show)
 
 instance FromJSON TrackItem where
@@ -51,25 +50,25 @@ instance FromJSON TrackResponse where
   parseJSON = withObject "items" $ \v -> TrackResponse
     <$> v .: "items"
 
-instance FromJSON AlbumItem where
-  parseJSON = withObject "item" $ \v -> AlbumItem
+instance FromJSON DeliveryRouteItem where
+  parseJSON = withObject "item" $ \v -> DeliveryRouteItem
     <$> v .: "id"
     <*> v .: "name"
     <*> v .: "release_date"
 
-instance FromJSON AlbumResponse where
-  parseJSON = withObject "items" $ \v -> AlbumResponse
+instance FromJSON DeliveryRouteResponse where
+  parseJSON = withObject "items" $ \v -> DeliveryRouteResponse
     <$> v .: "items"
 
-instance FromJSON ArtistItem where
-  parseJSON = withObject "item" $ \v -> ArtistItem
+instance FromJSON DriverVisitItem where
+  parseJSON = withObject "item" $ \v -> DriverVisitItem
     <$> v .: "id"
     <*> v .: "name"
 
-instance FromJSON ArtistObject where
-  parseJSON = withObject "items" $ \v -> ArtistObject
+instance FromJSON DriverVisitObject where
+  parseJSON = withObject "items" $ \v -> DriverVisitObject
     <$> v .: "items"
 
-instance FromJSON ArtistResponse where
-  parseJSON = withObject "artists" $ \v -> ArtistResponse
-    <$> v .: "artists"
+instance FromJSON DriverVisitResponse where
+  parseJSON = withObject "driverVisits" $ \v -> DriverVisitResponse
+    <$> v .: "driverVisits"

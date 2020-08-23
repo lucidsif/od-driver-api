@@ -1,9 +1,9 @@
 {-# LANGUAGE DeriveGeneric, OverloadedStrings, RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell, TypeFamilies, ViewPatterns #-}
 
-module Api.Domain.AlbumQL
-  ( AlbumQL(..)
-  , toAlbumQL
+module Api.Domain.DeliveryRouteQL
+  ( DeliveryRouteQL(..)
+  , toDeliveryRouteQL
   )
 where
 
@@ -18,19 +18,19 @@ import           Data.Text                      ( Text
                                                 )
 import           GHC.Generics                   ( Generic )
 import           Refined
-import           Repository.Entity              ( Album )
+import           Repository.Entity              ( DeliveryRoute )
 import qualified Repository.Entity             as E
 import           Text.Read                      ( readMaybe )
 
-data AlbumQL = AlbumQL
-  { spotifyId :: Text
+data DeliveryRouteQL = DeliveryRouteQL
+  { 
   , name :: Text
   , yearOfRelease :: Int
   , totalLength :: Text
   } deriving Generic
 
-instance GQLType AlbumQL where
-  type KIND AlbumQL = OBJECT
+instance GQLType DeliveryRouteQL where
+  type KIND DeliveryRouteQL = OBJECT
 
 type PosInt = Refined Positive Int
 
@@ -58,12 +58,10 @@ lengthFormatted (unrefine -> x) =
         Just (h, m) -> maybeAddZero h <> ":" <> noHour m
         Nothing     -> noHour mins
 
-toAlbumQL :: Album -> AlbumQL
-toAlbumQL E.Album {..} = AlbumQL
-  (E.unAlbumSpotifyId albumSpotifyId)
-  albumName
-  albumReleasedYear
-  (lengthFormatted $ positive albumTotalLength)
+toDeliveryRouteQL :: DeliveryRoute -> DeliveryRouteQL
+toDeliveryRouteQL E.DeliveryRoute {..} = DeliveryRouteQL
+  (E.unDeliveryRouteId deliveryRouteId)
+  deliveryRouteName
  where
   positive :: Int -> PosInt
   positive = either (\_ -> $$(refineTH 1) :: PosInt) id . refine

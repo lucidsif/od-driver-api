@@ -6,8 +6,6 @@ module Api.Schema.Query where
 
 import           Api.Args.DeliveryRoute                 ( DeliveryRouteArgs )
 import qualified Api.Args.DeliveryRoute                as DeliveryRouteArgs
-import           Api.Args.Artist                ( ArtistArgs )
-import qualified Api.Args.Artist               as Args
 import           Api.Dependencies               ( Deps(..) )
 import           Api.Domain.DeliveryRouteQL             ( DeliveryRouteQL
                                                 , toDeliveryRouteQL
@@ -44,5 +42,4 @@ resolveDeliveryRoutesByDriverVisit DeliveryRouteRepository {..} args = resolver 
 resolveQuery :: Deps -> Query
 resolveQuery Deps {..} = Query
   { driverVisit         = resolveDriverVisit Repository
-  , DeliveryRoutesByDriverVisit = resolveDeliveryRoutesByArtist DeliveryRouteRepository
   }

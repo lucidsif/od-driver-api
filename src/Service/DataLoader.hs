@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings, RecordWildCards #-}
 
 module Service.DataLoader
-  ( ExistingAlbumError(..)
-  , ExistingArtistError(..)
-  , createAlbums
-  , createArtists
+  ( ExistingDeliveryRouteError(..)
+  , ExistingDriverVisitError(..)
+  , createDeliveryRoutes
+  , createDriverVisits
   )
 where
 
@@ -23,109 +23,88 @@ import           Data.Maybe                     ( fromMaybe
 import           Data.Text                      ( Text
                                                 , unpack
                                                 )
-import           Http.Client.Params             ( AlbumId(..)
-                                                , ArtistId(..)
-                                                , ArtistName(..)
+import           Http.Client.Params             ( DeliveryRouteId(..)
+                                                , DriverVisitId(..)
+                                                , DriverVisitName(..)
                                                 , AccessToken
                                                 )
 import qualified Http.Client.Response          as R
-import           Http.Client.Response           ( AlbumItem(..)
-                                                , AlbumResponse(..)
-                                                , ArtistItem(..)
+import           Http.Client.Response           ( DeliveryRouteItem(..)
+                                                , DeliveryRouteResponse(..)
+                                                , DriverVisitItem(..)
                                                 , TrackResponse(..)
                                                 )
-import           Http.Client.Spotify            ( SpotifyClient(..) )
-import           Repository.Album
-import           Repository.Artist
+import           Repository.DeliveryRoute
+import           Repository.DriverVisit
 import qualified Repository.Entity             as E
-import           Repository.Entity              ( Album
-                                                , Artist
+import           Repository.Entity              ( DeliveryRoute
+                                                , DriverVisit
                                                 )
 import           Repository.Song
 import           Text.Read                      ( readMaybe )
 
-data ExistingAlbumError = ExistingAlbumError deriving Show
-data ExistingArtistError = ExistingArtistError deriving Show
+data ExistingDeliveryRouteError = ExistingDeliveryRouteError deriving Show
+data ExistingDriverVisitError = ExistingDriverVisitError deriving Show
 
-instance Exception ExistingAlbumError
-instance Exception ExistingArtistError
+instance Exception ExistingDeliveryRouteError
+instance Exception ExistingDriverVisitError
 
-createArtists
-  :: SpotifyClient IO -> ArtistRepository IO -> [ArtistName] -> IO [Artist]
-createArtists client artistRepo names = do
-  verifyArtistDoesNotExist artistRepo names
+createDriverVisits
+  :: DriverVisitRepository IO -> [DriverVisit] -> IO [DriverVisit]
+createDriverVisits client driverVisitRepo names = do
+  verifyDriverVisitDoesNotExist driverVisitRepo names
   token   <- login client
-  artists <- getArtistsByName client token names
-  persistArtists artists artistRepo
-  pure artists
+  driverVisits <- getDriverVisitsByName client token names
+  persistDriverVisits driverVisits driverVisitRepo
+  pure driverVisits
 
-createAlbums :: SpotifyClient IO -> AlbumRepository IO -> ArtistId -> IO [Album]
-createAlbums client@SpotifyClient {..} repo@AlbumRepository {..} artistId = do
-  verifyAlbumDoesNotExist repo artistId
+createDeliveryRoutes :: DeliveryRouteRepository IO -> DriverVisitId -> IO [DeliveryRoute]
+createDeliveryRoutes repo@DeliveryRouteRepository {..} driverVisitId = do
+  verifyDeliveryRouteDoesNotExist repo DeliveryRouteId
   token  <- login
-  albums <- getArtistAlbums token artistId
-  let albumIds = AlbumId . R.albumId <$> R.albumItems albums
-  tracks <- mapConcurrently (getTracksForAlbum client token) albumIds
-  let sortedAlbums   = sort $ R.albumItems albums
-  let sortedDuration = snd <$> sort tracks
-  let albums' = uncurry toAlbum <$> sortedAlbums `zip` sortedDuration
-  let artistId'      = E.ArtistSpotifyId (unArtistId artistId)
-  persistAlbums albums' artistId' repo
-  pure albums'
+  deliveryRoutes <- getDeliveryRouteId token driverVisitId
+  let deliveryRouteIds = DeliveryRouteId . R.deliveryRouteId <$> R.deliveryRouteItems deliveryRoutes
+  tracks <- mapConcurrently (getTracksForDeliveryRoute client token) deliveryRouteIds
+  let sortedDeliveryRoutes   = sort $ R.deliveryRouteItems DeliveryRoutes
+  let DeliveryRoutes' = uncurry toDeliveryRoute <$> sortedDeliveryRoutes `zip` 
+  let driverVisitId'      = E.DriverVisitId (unDriverVisitId driverVisitId)
+  persistDeliveryRoutes' driverVisitId' repo
+  pure deliveryRoutes'
 
-verifyArtistDoesNotExist :: ArtistRepository IO -> [ArtistName] -> IO ()
-verifyArtistDoesNotExist ArtistRepository {..} names = do
-  let repoNames = E.ArtistName . unArtistName <$> names
-  result <- traverse findArtist repoNames
+verifyDeliveryRouteDoesNotExist :: DeliveryRouteRepository IO -> [DriverVisitName] -> IO ()
+verifyDriverVisitDoesNotExist DriverVisitRepository {..} names = do
+  let repoNames = E.DriverVisitName . unDriverVisitName <$> names
+  result <- traverse findDriverVisit repoNames
   let filtered = result >>= maybeToList
-  if not (null filtered) then throwM ExistingArtistError else pure ()
+  if not (null filtered) then throwM ExistingDriverVisitError else pure ()
 
-verifyAlbumDoesNotExist :: AlbumRepository IO -> ArtistId -> IO ()
-verifyAlbumDoesNotExist AlbumRepository {..} ArtistId {..} = do
-  let spotifyId = E.ArtistSpotifyId unArtistId
-  result <- findAlbumsByArtistId spotifyId
-  if not (null result) then throwM ExistingAlbumError else pure ()
+verifyDeliveryRouteDoesNotExist :: DeliveryRouteRepository IO -> DriverVisitId -> IO ()
 
 toSeconds :: Int -> Int
 toSeconds ms = ms `div` 1000
 
-getArtistsByName
-  :: SpotifyClient IO -> AccessToken -> [ArtistName] -> IO [Artist]
-getArtistsByName SpotifyClient {..} token names = do
-  responses <- mapConcurrently (searchArtist token) names
-  pure $ toArtist <$> (responses >>= R.artistItems . R.artistObject)
+getDriverVisitsByName
+  :: -> [DriverVisit] -> IO [DriverVisit]
 
-getAlbums :: SpotifyClient IO -> AccessToken -> [ArtistId] -> IO [AlbumResponse]
-getAlbums SpotifyClient {..} token = mapConcurrently (getArtistAlbums token)
 
-getTracksForAlbum
-  :: SpotifyClient IO -> AccessToken -> AlbumId -> IO (AlbumId, Int)
-getTracksForAlbum SpotifyClient {..} token albumId =
-  let calcLength t = toSeconds . sum $ R.trackDurationMs <$> R.trackItems t
-  in  (\t -> (albumId, calcLength t)) <$> getAlbumTracks token albumId
+persistDeliveryRoutes :: [DeliveryRoute] --> DeliveryRouteRepository IO -> IO ()
+persistDeliveryRoutes [] _ _ = putStrLn "No delivery routes to persist"
+persistDeliveryRoutes deliveryRoutes driverVisitId DeliveryRouteRepository {..} = do
+  putStrLn $ "Persisting delivery routes: " <> show deliveryRoutes
+  mapConcurrently_ (createDeliveryRoutes name) deliveryRoutes
 
-getAlbumDuration
-  :: SpotifyClient IO -> AccessToken -> [AlbumId] -> IO [TrackResponse]
-getAlbumDuration SpotifyClient {..} token = traverse (getAlbumTracks token)
+persistDriverVisits :: [DriverVisit] -> DriverVisitRepository IO -> IO ()
+persistDriverVisits []      _                     = putStrLn "No driver visits to persist"
+persistDriverVisits driverVisits DriverVisitRepository {..} = do
+  putStrLn $ "Persisting driver visits " <> show driverVisits
+  mapConcurrently_ createDriverVisits driverVisits
 
-persistAlbums :: [Album] -> E.ArtistSpotifyId -> AlbumRepository IO -> IO ()
-persistAlbums [] _ _ = putStrLn "No albums to persist"
-persistAlbums albums artistId AlbumRepository {..} = do
-  putStrLn $ "Persisting albums: " <> show albums
-  mapConcurrently_ (createAlbum artistId) albums
+toDriverVisit :: DriverVisitItem -> DriverVisit
+toDriverVisit DriverVisitItem {..} = E.DriverVisit (driverVisitId) driverVisitName
 
-persistArtists :: [Artist] -> ArtistRepository IO -> IO ()
-persistArtists []      _                     = putStrLn "No artists to persist"
-persistArtists artists ArtistRepository {..} = do
-  putStrLn $ "Persisting artists " <> show artists
-  mapConcurrently_ createArtist artists
-
-toArtist :: ArtistItem -> Artist
-toArtist ArtistItem {..} = E.Artist (E.ArtistSpotifyId artistId) artistName
-
-toAlbum :: AlbumItem -> Int -> Album
-toAlbum AlbumItem {..} =
-  E.Album (E.AlbumSpotifyId albumId) albumName (dateToYear albumReleaseDate)
+toDeliveryRoute :: DeliveryRouteItem -> Int -> DeliveryRoute
+toDeliveryRoute DeliveryRouteItem {..} =
+  E.DeliveryRoute (deliveryRouteId) deliveryRouteName ()
 
 dateToYear :: Text -> Int
 dateToYear txt = fromMaybe 0 $ readMaybe (take 4 (unpack txt))

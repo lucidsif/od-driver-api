@@ -11,41 +11,25 @@ import           GHC.Generics
 import qualified GHC.IO.Encoding
 import qualified System.IO
 
-data Neo4jConfig = Neo4jConfig
-  { neo4jHost :: Text
-  , neo4jPort :: Natural
-  , neo4jUser :: Text
-  , neo4jPassword :: Text
-  , neo4jSecure :: Bool
+data PsqlConfig = psqlConfig
+  { psqlHost :: Text
+  , psqlPort :: Natural
+  , psqlUser :: Text
+  , psqlPassword :: Text
   } deriving (Generic, Show)
 
 newtype HttpServerConfig = HttpServerConfig
   { serverPort :: Natural
   } deriving (Generic, Show)
 
-data SpotifyConfig = SpotifyConfig
-  { apiKey :: Text
-  , apiUri :: Text
-  , apiAuth :: Text
-  } deriving Generic
-
 data AppConfig = AppConfig
-  { neo4j :: Neo4jConfig
+  { psql :: PsqlConfig
   , httpServer :: HttpServerConfig
-  , spotify :: SpotifyConfig
   } deriving (Generic, Show)
 
-instance Show SpotifyConfig where
-  show c =
-    "SpotfyConfig {apiUri = \""
-      <> unpack (apiUri c)
-      <> "\", apiKey = [SECRET], apiAuth = "
-      <> unpack (apiAuth c)
-      <> "}"
 
-instance Interpret Neo4jConfig
+instance Interpret PsqlConfig
 instance Interpret HttpServerConfig
-instance Interpret SpotifyConfig
 instance Interpret AppConfig
 
 loadConfig :: IO AppConfig
