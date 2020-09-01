@@ -22,6 +22,8 @@ but we all have to start somewhere I suppose. If you are a Haskell master, pleas
 could have been doing. My ego was dissolved when I came across monads - I am here to learn and join the Haskell ranks if I am deserving. Please let this project
 help you determine that.
 
+Please note - I may be adding or making modifications on this during or while you are reviewing the code so be warned of that. I'll self merge PRs so changes are tracked in a sane manner.
+
 ### GraphQL API via Http
 
 Go to `http://localhost:3000/api` and start sending queries. 
